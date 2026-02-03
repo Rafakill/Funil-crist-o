@@ -11,55 +11,54 @@
         rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <!-- Note: /style.css so it finds the root style -->
-    <!-- Meta Pixel Code + Advanced Matching (SendPulse) -->
+
+    <!-- Meta Pixel Code + Advanced Matching + Trava Anti-Duplicidade -->
     <script>
-        // 1. Função para capturar dados da URL
-        function getParam(p) {
-            var match = RegExp('[?&]' + p + '=([^&]*)').exec(window.location.search);
-            return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
-        }
+        // VERIFICA SE O EVENTO JÁ FOI DISPARADO NESTE NAVEGADOR
+        if (!localStorage.getItem('purchaseEventFired')) {
 
-        // 2. Captura os dados que vieram do SendPulse
-        var rawPhone = getParam('cel') || '';
-        var rawName = getParam('nome') || '';
+            // 1. Função para pegar dados da URL
+            function getParam(p) {
+                var match = RegExp('[?&]' + p + '=([^&]*)').exec(window.location.search);
+                return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+            }
 
-        // Limpeza: Remove o "+" e espaços, deixa só números para o Facebook
-        var cleanPhone = rawPhone.replace(/\D/g, '');
+            // 2. Captura e Limpeza dos Dados
+            var rawPhone = getParam('cel') || '';
+            var rawName = getParam('nome') || '';
+            var cleanPhone = rawPhone.replace(/\D/g, '');
 
-        // 3. Inicializa o Pixel
-        !function (f, b, e, v, n, t, s) {
-            if (f.fbq) return; n = f.fbq = function () {
-                n.callMethod ?
+            // 3. Código Padrão do Pixel
+            !function (f, b, e, v, n, t, s) {
+                if (f.fbq) return; n = f.fbq = function () {
+                    n.callMethod ?
                     n.callMethod.apply(n, arguments) : n.queue.push(arguments)
-            };
-            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
-            n.queue = []; t = b.createElement(e); t.async = !0;
-            t.src = v; s = b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t, s)
-        }(window, document, 'script',
-            'https://connect.facebook.net/en_US/fbevents.js');
+                };
+                if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+                n.queue = []; t = b.createElement(e); t.async = !0;
+                t.src = v; s = b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t, s)
+            }(window, document, 'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
 
-        // 4. Inicia com os dados do cliente (Advanced Matching Manual)
-        // O Facebook vai cruzar esse telefone com o banco de dados deles
-        if (cleanPhone) {
-            fbq('init', '1520825845646047', {
-                ph: cleanPhone,   // Telefone
-                fn: rawName       // Primeiro Nome
+            // 4. Inicia com os dados do cliente
+            fbq('init', '1520825845646047', { ph: cleanPhone, fn: rawName });
+
+            fbq('track', 'PageView');
+
+            // 5. Dispara a Compra
+            fbq('track', 'Purchase', {
+                value: 8.00,
+                currency: 'USD'
             });
+
+            // 6. MARCA NO NAVEGADOR QUE O EVENTO FOI DISPARADO
+            localStorage.setItem('purchaseEventFired', 'true');
+            console.log('Evento de Compra disparado pela primeira vez.');
+
         } else {
-            // Se por acaso não vier dados na URL, inicia normal
-            fbq('init', '1520825845646047');
+            console.log('Evento de Compra já foi disparado. Bloqueando novo disparo.');
         }
-
-        // Rastreia a visita na página
-        fbq('track', 'PageView');
-
-        // 5. Dispara a Compra (Purchase)
-        fbq('track', 'Purchase', {
-            value: 8.00,        // Valor da venda (ajuste se precisar)
-            currency: 'USD',    // Moeda
-            content_name: 'Pack Biblico - SendPulse'
-        });
     </script>
 
     <noscript><img height="1" width="1" style="display:none"
